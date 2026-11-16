@@ -3,19 +3,20 @@ import * as C from './lib/cannon-es.min.js';
 import { crear } from './dados.js';
 
 export const PASO = 1 / 120;
+export const FUERZA = [0, 22.5, 23.5, 26, 27.5, 28.5, 29.5, 30.5, 31, 31, 28, 26, 23];   // velocidad de salida según el número de dados
 const rnd = (a, b) => a + Math.random() * (b - a);
 
 export class Mesa {
   constructor() {
-    const w = this.mundo = new C.World({ gravity: new C.Vec3(0, -85, 0) });
+    const w = this.mundo = new C.World({ gravity: new C.Vec3(0, -110, 0) });
     w.allowSleep = false;
     w.solver.iterations = 16;
     this.mDado = new C.Material('dado');
     this.mSuelo = new C.Material('suelo');
     this.mPared = new C.Material('pared');
-    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mSuelo, { friction: 0.48, restitution: 0.24 }));
-    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mPared, { friction: 0.04, restitution: 0.55 }));
-    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mDado, { friction: 0.18, restitution: 0.38 }));
+    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mSuelo, { friction: 0.42, restitution: 0.22 }));
+    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mPared, { friction: 0.08, restitution: 0.5 }));
+    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mDado, { friction: 0.16, restitution: 0.42 }));
     const plano = (mat, ex, ey) => {
       const b = new C.Body({ mass: 0, shape: new C.Plane(), material: mat });
       b.quaternion.setFromEuler(ex, ey, 0);
@@ -34,12 +35,13 @@ export class Mesa {
     this.limites(5, 5);
   }
 
-  limites(hw, hd) {
-    this.hw = hw; this.hd = hd;
+  // abajo: margen sobre el borde inferior que no deben pisar los dados quietos (los botones flotantes)
+  limites(hw, hd, abajo = 0) {
+    this.hw = hw; this.hd = hd; this.abajo = abajo;
     this.pIzq.position.set(-hw, 0, 0);
     this.pDer.position.set(hw, 0, 0);
     this.pFondo.position.set(0, 0, -hd);
-    this.pFrente.position.set(0, 0, hd);
+    if (!this.entrando) this.pFrente.position.set(0, 0, hd - abajo);
     for (const d of this.dados) {            // si la bandeja encoge, que ningún dado quede fuera
       const p = d.cuerpo.position, m = d.def.radio;
       p.x = Math.max(-hw + m, Math.min(hw - m, p.x));
@@ -58,7 +60,7 @@ export class Mesa {
       vertices: def.verts.map(v => new C.Vec3(v[0], v[1], v[2])),
       faces: def.caras.map(c => c.idx.slice())
     });
-    const cuerpo = new C.Body({ mass: 1, shape: forma, material: this.mDado, linearDamping: 0.08, angularDamping: 0.08 });
+    const cuerpo = new C.Body({ mass: 1, shape: forma, material: this.mDado, linearDamping: 0.12, angularDamping: 0.14 });
     const q = new C.Quaternion(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1), rnd(-1, 1));
     q.normalize();
     cuerpo.quaternion.copy(q);
@@ -82,18 +84,26 @@ export class Mesa {
     this.vacia();
     this.agitando = false;
     const n = tipos.length, hw = this.hw, hd = this.hd;
-    const porFila = Math.max(1, Math.min(4, Math.floor((2 * hw - 0.4) / 2.5)));
-    const empuje = Math.min(1.3, Math.max(0.8, hd / 7.5));        // mesa más larga, tirada más fuerte
+    // Entran desde fuera de la pantalla, por abajo: la pared de abajo se aparta hasta que todos han entrado
+    this.pFrente.position.set(0, 0, hd + 9);
+    this.entrando = true;
+    const porFila = Math.max(1, Math.min(4, Math.floor((2 * hw - 0.6) / 2.4)));
+    const largo = Math.min(1.25, Math.max(0.8, hd / 7.8));        // en mesas más largas, algo más de fuerza
+    // con pocos dados nada los frena; con muchos chocan entre ellos y necesitan más impulso para llegar al centro
+    const base = FUERZA[Math.min(n, FUERZA.length - 1)];
     tipos.forEach((tipo, i) => {
-      const { cuerpo } = this.creaCuerpo(tipo);
+      const { def, cuerpo } = this.creaCuerpo(tipo);
       const col = i % porFila, fila = Math.floor(i / porFila), enFila = Math.min(porFila, n - fila * porFila);
-      cuerpo.position.set(
-        (col - (enFila - 1) / 2) * Math.min(2.5, (2 * hw - 2.6) / Math.max(1, enFila - 1)) + rnd(-0.15, 0.15),
-        2.6 + rnd(0, 0.7) + (fila % 2) * 0.9,
-        Math.max(-hd + 1.6, hd - 1.4 - fila * 2.5) + rnd(-0.2, 0.2)
-      );
-      cuerpo.velocity.set(rnd(-6, 6) * fuerza, rnd(-3, 1), -rnd(22, 31) * fuerza * empuje);
-      cuerpo.angularVelocity.set(rnd(-28, 28) * fuerza, rnd(-28, 28) * fuerza, rnd(-28, 28) * fuerza);
+      const x = enFila === 1 ? rnd(-hw * 0.45, hw * 0.45)
+        : (col - (enFila - 1) / 2) * Math.min(2.4, (2 * hw - 2.4) / (enFila - 1)) + rnd(-0.25, 0.25);
+      cuerpo.position.set(x, def.radio + rnd(0.3, 0.9), hd + 1.7 + fila * 2.3 + rnd(-0.2, 0.2));
+      // rodando hacia arriba de la pantalla, con un ángulo que los lleva a tocar los laterales
+      const extra = fila * 2.3;                                   // las filas de atrás salen más lejos: algo más de fuerza
+      const vz = -base * rnd(0.92, 1.08) * fuerza * largo * Math.sqrt((10 + Math.min(extra, 4.6)) / 10);
+      const vx = rnd(-7, 7) * fuerza - x * 0.4;
+      cuerpo.velocity.set(vx, rnd(1, 3.5), vz);
+      // giro hacia delante, como un dado que rueda al soltarlo, con algo de azar
+      cuerpo.angularVelocity.set(vz / def.radio * rnd(0.45, 0.85) + rnd(-5, 5), rnd(-9, 9), -vx / def.radio * rnd(0.3, 0.6) + rnd(-5, 5));
     });
     this.reinicia();
     return this.dados;
@@ -154,6 +164,18 @@ export class Mesa {
     this.mundo.step(PASO);
     if (this.agitando) return false;           // mientras se agita, no se cuenta nada
     this.t += PASO;
+    if (this.entrando) {                       // ¿han entrado todos? Se vuelve a poner la pared de abajo
+      let dentro = true;
+      for (const d of this.dados) {
+        const z = d.cuerpo.position.z;
+        if (z > this.hd - (this.abajo || 0) - d.def.radio * 1.05) {
+          dentro = false;
+          if (this.t > 0.9 && d.cuerpo.velocity.z > -6) d.cuerpo.velocity.z = -6;   // el rezagado, para dentro
+        }
+      }
+      if (dentro) { this.pFrente.position.set(0, 0, this.hd - (this.abajo || 0)); this.entrando = false; }
+      return false;
+    }
     if (this.t < 0.4) return false;
     for (const d of this.dados) {                  // freno: apaga el temblor de los dados ya tumbados sobre una cara
       const b = d.cuerpo;

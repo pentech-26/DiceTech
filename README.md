@@ -10,7 +10,7 @@ Lanzador de dados 3D para juegos de rol, by PenTech.
 Ojo: no funciona abriendo `index.html` con doble clic; tiene que servirse por https (GitHub Pages).
 
 ## Publicar un cambio
-- Sustituir los archivos modificados y subir siempre `CACHE` en `sw.js` (`dicetech-v6` → `dicetech-v7`…).
+- Sustituir los archivos modificados y subir siempre `CACHE` en `sw.js` (`dicetech-v10` → `dicetech-v11`…).
 - No tocar `VERSION` (se queda en `v1.0`).
 
 ## Archivos

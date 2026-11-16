@@ -40,14 +40,19 @@ COLOR.d100 = COLOR.d00;
 
 let idioma = idiomaInicial(), t = T[idioma];
 let tema = lee('dicetech-tema', 'auto');
-let modo = lee('dicetech-modo', 'cth');
-let hab = Math.max(1, Math.min(99, +lee('dicetech-habilidad', 50) || 50));
-let libre = Object.assign({ d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0 }, lee('dicetech-libre', {}));
-let mod = +lee('dicetech-mod', 0) || 0;
+// La selección (modo, habilidad, dados y modificador) empieza siempre de cero: al abrir la app y al volver del tapete
+let modo, hab, libre, mod;
+function seleccionInicial() {
+  modo = 'libre';                // nada marcado: ni la tarjeta de Cthulhu ni ningún dado
+  hab = 50;
+  libre = { d4: 0, d6: 0, d8: 0, d10: 0, d12: 0, d20: 0, d100: 0 };
+  mod = 0;
+}
+seleccionInicial();
 let sonido = lee('dicetech-sonido', true);
 let historial = lee('dicetech-historial-v1', []);
 let enTapete = false, rodando = false, ultima = null;
-let fase = 'vacio';        // vacio · agitando (cubilete) · rodando · quieto
+let fase = 'vacio';        // vacio · agitando (suenan los dados, aún no se ven) · rodando · quieto
 
 /* ───────────── Sonido (sintetizado, sin archivos) ───────────── */
 let ac = null, ruido = null, salida = null, rumorG = null;
@@ -235,17 +240,30 @@ function ajusta() {
   s.updateProjectionMatrix();
   const u = hw / (w / 2);                    // unidades por píxel
   // paredes en el borde del fieltro; un poco hacia dentro porque la perspectiva abre los dados hacia fuera
-  mesa.limites((w / 2 - BORDE) * u * 0.93, (h / 2 - BORDE) * u * 0.955);
+  // abajo quedan los botones flotantes (22 px + 50 px): los dados no se paran debajo
+  mesa.limites((w / 2 - BORDE) * u * 0.93, (h / 2 - BORDE) * u * 0.955, (72 - BORDE) * u);
   pinta();
 }
 
-function pinta() {
+const qTmp = new THREE.Quaternion(), pTmp = new THREE.Vector3();
+function pinta(alfa) {
   for (const m of mallas) {
     const b = m.dado.cuerpo;
-    m.malla.position.set(b.position.x, b.position.y, b.position.z);
-    m.malla.quaternion.set(b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w);
+    pTmp.set(b.position.x, b.position.y, b.position.z);
+    qTmp.set(b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w);
+    if (alfa != null && m.prevP) {           // entre dos pasos de física: movimiento más suave
+      m.malla.position.copy(m.prevP).lerp(pTmp, alfa);
+      m.malla.quaternion.copy(m.prevQ).slerp(qTmp, alfa);
+    } else { m.malla.position.copy(pTmp); m.malla.quaternion.copy(qTmp); }
   }
   renderer.render(escena, camara);
+}
+function guardaPrevio() {
+  for (const m of mallas) {
+    const b = m.dado.cuerpo;
+    (m.prevP || (m.prevP = new THREE.Vector3())).set(b.position.x, b.position.y, b.position.z);
+    (m.prevQ || (m.prevQ = new THREE.Quaternion())).set(b.quaternion.x, b.quaternion.y, b.quaternion.z, b.quaternion.w);
+  }
 }
 
 let previo = 0, resto = 0;
@@ -253,17 +271,10 @@ function cuadro(ts) {
   if (!rodando) return;
   resto += Math.min(0.05, (ts - previo) / 1000 || 0);
   previo = ts;
-  const ahora = performance.now();
   while (resto >= PASO && rodando) {
     resto -= PASO;
-    if (fase === 'agitando') {
-      if (ahora - acc.t < 90) mesa.zarandea(acc.x, acc.y, acc.z, PASO);   // solo con datos recientes del sensor
-      mesa.paso();
-    } else if (mesa.paso()) rodando = false;
-  }
-  if (fase === 'agitando' && ahora - fuerteUlt > 380 && ahora - inicioAgite > 300) {   // se ha dejado de agitar: ¡salen!
-    mesa.suelta();
-    fase = 'rodando';
+    guardaPrevio();
+    if (mesa.paso()) rodando = false;
   }
   let s = 0;                                // el rumor sube con lo que ruedan los dados apoyados
   for (const d of mesa.dados) {
@@ -271,7 +282,7 @@ function cuadro(ts) {
     if (b.position.y < d.def.radio * 1.3) s += Math.hypot(b.velocity.x, b.velocity.z) + b.angularVelocity.length() * 0.25;
   }
   rumor(Math.min(0.16, s / 230));
-  pinta();
+  pinta(rodando ? resto / PASO : null);
   if (rodando) requestAnimationFrame(cuadro); else fin();
 }
 
@@ -294,11 +305,10 @@ function limpiaMesa() {
 }
 
 function tirar(fuerza) {
-  if (rodando || !enTapete) return;
+  if (rodando || !enTapete || fase === 'agitando') return;
   despiertaAudio();
   const tipos = tiposTirada();
   if (!tipos.length) return;
-  tiposMesa = tipos.join(',');
   for (const m of mallas) escena.remove(m.malla);
   mallas = mesa.lanzar(tipos, typeof fuerza === 'number' ? fuerza : 1).map(dado => {
     const p = pieza(dado.tipo), malla = new THREE.Mesh(p.geo, p.mat);
@@ -316,32 +326,6 @@ function tirar(fuerza) {
     while (!mesa.paso() && s++ < 2000) {}
     rodando = false; pinta(); fin();
   } else { previo = performance.now(); resto = 0; requestAnimationFrame(cuadro); }
-}
-
-let tiposMesa = '';
-function empiezaCubilete() {
-  despiertaAudio();
-  const tipos = tiposTirada();
-  if (!tipos.length) return;
-  const clave = tipos.join(',');
-  if (fase === 'quieto' && mesa.dados.length && clave === tiposMesa) mesa.agitaOtraVez();   // se recogen los mismos dados
-  else {
-    for (const m of mallas) escena.remove(m.malla);
-    mallas = mesa.prepara(tipos).map(dado => {
-      const p = pieza(dado.tipo), malla = new THREE.Mesh(p.geo, p.mat);
-      malla.castShadow = true;
-      escena.add(malla);
-      return { dado, malla };
-    });
-  }
-  tiposMesa = clave;
-  ultima = { pendiente: true, m: modo, h: hab, mod };
-  fase = 'agitando'; rodando = true;
-  inicioAgite = performance.now();
-  $('#pista').classList.add('fuera');
-  $('#resT').classList.remove('ver');
-  $('#btnRepetir').hidden = true;
-  previo = performance.now(); resto = 0; requestAnimationFrame(cuadro);
 }
 
 function nivelCth(r, h) {               // ediciones anteriores a la 7.ª
@@ -435,6 +419,8 @@ function abreTapete() {
 
 function cierraTapete() {
   if (!enTapete) return;
+  seleccionInicial();
+  pintaSelector();
   enTapete = false; rodando = false; fase = 'vacio'; rumor(0);
   $('#tapete').classList.remove('abierto');
   document.body.classList.remove('en-tapete');
@@ -456,7 +442,7 @@ let agitar = lee('dicetech-agitar', null);      // true, false o null (sin decid
 let escucha = false, denegado = false, ultimoFin = 0, aTapete = 0, golpes = [];
 const agitaActivo = () => puedeAgitar && !denegado && agitar === true && escucha;
 
-let acc = { x: 0, y: 0, z: 0, t: 0 }, fuerteUlt = 0, inicioAgite = 0, gBaja = null;
+let fuerteUlt = 0, inicioAgite = 0, gBaja = null, pico = 0, relojAgite = 0;
 function alMover(e) {
   if (!agitar || !enTapete || document.hidden || $('#velo').classList.contains('abierto')) return;
   let x, y, z;
@@ -470,19 +456,33 @@ function alMover(e) {
     x = g.x - gBaja.x; y = g.y - gBaja.y; z = g.z - gBaja.z;
   }
   const m = Math.hypot(x, y, z), ahora = performance.now();
-  if (fase === 'agitando') {                                 // los dados siguen al móvil
-    acc = { x, y, z, t: ahora };
+  if (fase === 'agitando') {                                 // agitando: los dados suenan dentro del cubilete
     if (m > 6) fuerteUlt = ahora;
+    pico = Math.max(pico, m);
+    if (m > 13 && Math.random() < 0.45) golpe(8 + Math.random() * 14, 'dado', tiposTirada()[0]);
     return;
   }
   if (fase === 'rodando' || ahora - ultimoFin < 600 || ahora - aTapete < 400) return;
   golpes = golpes.filter(g => ahora - g < 450);
   if (m < 12) return;
   if (!golpes.length || ahora - golpes[golpes.length - 1] > 60) golpes.push(ahora);
-  if (golpes.length >= 2) {                                  // dos sacudidas seguidas: empieza el cubilete
+  if (golpes.length >= 2) {                                  // dos sacudidas seguidas: empieza a agitar
     golpes = [];
-    acc = { x, y, z, t: ahora }; fuerteUlt = ahora;
-    empiezaCubilete();
+    despiertaAudio();
+    fase = 'agitando'; fuerteUlt = ahora; inicioAgite = ahora; pico = m;
+    $('#pista').classList.add('fuera');
+    $('#resT').classList.remove('ver');
+    $('#btnRepetir').hidden = true;
+    clearInterval(relojAgite);
+    relojAgite = setInterval(() => {                         // al dejar de agitar, salen rodando desde abajo
+      const t = performance.now();
+      if (fase !== 'agitando' || !enTapete) return clearInterval(relojAgite);
+      if (t - fuerteUlt > 320 && t - inicioAgite > 250) {
+        clearInterval(relojAgite);
+        fase = 'vacio';
+        tirar(Math.max(0.95, Math.min(1.07, 0.9 + pico / 200)));   // un meneo fuerte da algo más de impulso, sin pasarse
+      }
+    }, 50);
   }
 }
 
@@ -662,8 +662,8 @@ function abreHistorial() {
 
 function cambiaHab(d) {
   hab = Math.max(1, Math.min(99, hab + d));
-  guarda('dicetech-habilidad', hab);
-  if (modo !== 'cth') { modo = 'cth'; guarda('dicetech-modo', modo); }
+  
+  if (modo !== 'cth') { modo = 'cth'; }
   pintaSelector();
 }
 
@@ -701,23 +701,23 @@ document.addEventListener('click', e => {
   if (el.dataset.menos) {
     const k = el.dataset.menos;
     if (libre[k] > 0) libre[k]--;
-    modo = 'libre'; guarda('dicetech-modo', modo); guarda('dicetech-libre', libre);
+    modo = 'libre'; 
     return pintaSelector();
   }
   if (el.dataset.d) {
     const k = el.dataset.d;
-    modo = 'libre'; guarda('dicetech-modo', modo);
+    modo = 'libre'; 
     if (totalDados() + (k === 'd100' ? 2 : 1) > MAX_DADOS) { pintaSelector(); return aviso(t.maxDados.replace('{n}', MAX_DADOS)); }
-    libre[k]++; guarda('dicetech-libre', libre); giraMini(k);
+    libre[k]++; giraMini(k);
     return pintaSelector();
   }
   if (el.dataset.mod) {
-    mod = Math.max(-99, Math.min(99, mod + +el.dataset.mod)); guarda('dicetech-mod', mod);
-    modo = 'libre'; guarda('dicetech-modo', modo);
+    mod = Math.max(-99, Math.min(99, mod + +el.dataset.mod));
+    modo = 'libre'; 
     return pintaSelector();
   }
-  if (el.id === 'cth') { if (e.target.id !== 'hab') { modo = 'cth'; guarda('dicetech-modo', modo); giraMini('cth'); pintaSelector(); } return; }
-  if (el.id === 'btnVaciar') { for (const k of ORDEN) libre[k] = 0; mod = 0; guarda('dicetech-libre', libre); guarda('dicetech-mod', 0); return pintaSelector(); }
+  if (el.id === 'cth') { if (e.target.id !== 'hab') { modo = 'cth'; giraMini('cth'); pintaSelector(); } return; }
+  if (el.id === 'btnVaciar') { for (const k of ORDEN) libre[k] = 0; mod = 0; return pintaSelector(); }
   if (el.id === 'btnLanzar') return abreTapete();
   if (el.id === 'btnHist') return abreHistorial();
   if (el.id === 'btnSonido') { sonido = !sonido; guarda('dicetech-sonido', sonido); if (sonido) despiertaAudio(); return pintaTema(); }
@@ -731,8 +731,8 @@ document.addEventListener('click', e => {
 });
 $('#hab').addEventListener('change', () => {
   hab = Math.max(1, Math.min(99, Math.round(+$('#hab').value) || 1));
-  guarda('dicetech-habilidad', hab);
-  modo = 'cth'; guarda('dicetech-modo', modo);
+  
+  modo = 'cth'; 
   pintaSelector();
 });
 $('#hab').addEventListener('focus', () => { $('#hab').select(); modo = 'cth'; pintaSelector(); });
