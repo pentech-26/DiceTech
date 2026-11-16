@@ -10,10 +10,10 @@ Lanzador de dados 3D para juegos de rol, by PenTech.
 Ojo: no funciona abriendo `index.html` con doble clic; tiene que servirse por https (GitHub Pages).
 
 ## Publicar un cambio
-- Sustituir los archivos modificados y subir siempre `CACHE` en `sw.js` (`dicetech-v1` → `dicetech-v2`…).
+- Sustituir los archivos modificados y subir siempre `CACHE` en `sw.js` (`dicetech-v3` → `dicetech-v4`…).
 - No tocar `VERSION` (se queda en `v1.0`).
 
 ## Archivos
-- `index.html` (pantalla y estilos), `app.js` (interfaz, 3D, idiomas), `fisica.js` (física de la bandeja), `dados.js` (geometría de los dados)
+- `index.html` (pantalla y estilos), `app.js` (interfaz, 3D, idiomas), `fisica.js` (física de la bandeja), `dados.js` (geometría de los dados), `textos.js` (los 6 idiomas)
 - `lib/` three.js 0.187 y cannon-es 0.20 (licencia MIT), `fonts/` Cinzel e IM Fell English SC (OFL)
 - `sw.js`, `manifest.json`, iconos (provisionales)

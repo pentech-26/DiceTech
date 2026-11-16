@@ -13,7 +13,7 @@ export class Mesa {
     this.mDado = new C.Material('dado');
     this.mSuelo = new C.Material('suelo');
     this.mPared = new C.Material('pared');
-    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mSuelo, { friction: 0.42, restitution: 0.3 }));
+    w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mSuelo, { friction: 0.48, restitution: 0.24 }));
     w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mPared, { friction: 0.04, restitution: 0.55 }));
     w.addContactMaterial(new C.ContactMaterial(this.mDado, this.mDado, { friction: 0.18, restitution: 0.38 }));
     const plano = (mat, ex, ey) => {
@@ -55,7 +55,9 @@ export class Mesa {
   // tipos: ['d00','d10'] ...   Devuelve la lista de dados creados
   lanzar(tipos, fuerza = 1) {
     this.vacia();
-    const n = tipos.length, porFila = Math.max(1, Math.min(4, Math.floor((this.hw * 2 - 1) / 2.5)));
+    const n = tipos.length, hw = this.hw, hd = this.hd;
+    const porFila = Math.max(1, Math.min(4, Math.floor((2 * hw - 0.4) / 2.5)));
+    const empuje = Math.min(1.3, Math.max(0.8, hd / 7.5));        // mesa más larga, tirada más fuerte
     tipos.forEach((tipo, i) => {
       const def = crear(tipo);
       const forma = new C.ConvexPolyhedron({
@@ -64,20 +66,23 @@ export class Mesa {
       });
       const cuerpo = new C.Body({ mass: 1, shape: forma, material: this.mDado, linearDamping: 0.08, angularDamping: 0.08 });
       const col = i % porFila, fila = Math.floor(i / porFila), enFila = Math.min(porFila, n - fila * porFila);
+      // entran desde el borde de abajo, en filas hacia dentro de la mesa
       cuerpo.position.set(
-        (col - (enFila - 1) / 2) * 2.5 + rnd(-0.15, 0.15),
-        2.2 + fila * 2.7 + rnd(0, 0.4),
-        Math.min(this.hd - 1.3, this.hd * 0.5 + fila * 0.5) + rnd(-0.2, 0.2)
+        (col - (enFila - 1) / 2) * Math.min(2.5, (2 * hw - 2.6) / Math.max(1, enFila - 1)) + rnd(-0.15, 0.15),
+        2.6 + rnd(0, 0.7) + (fila % 2) * 0.9,
+        Math.max(-hd + 1.6, hd - 1.4 - fila * 2.5) + rnd(-0.2, 0.2)
       );
       const q = new C.Quaternion(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1), rnd(-1, 1));
       q.normalize();
       cuerpo.quaternion.copy(q);
-      cuerpo.velocity.set(rnd(-7, 7) * fuerza, rnd(-4, 2), -rnd(19, 28) * fuerza / (1 + fila * 0.55));   // las filas de arriba salen más lentas para no caer encima
+      cuerpo.velocity.set(rnd(-6, 6) * fuerza, rnd(-3, 1), -rnd(22, 31) * fuerza * empuje);
       cuerpo.angularVelocity.set(rnd(-28, 28) * fuerza, rnd(-28, 28) * fuerza, rnd(-28, 28) * fuerza);
       cuerpo.addEventListener('collide', e => {
         if (!this.alChocar) return;
         const v = Math.abs(e.contact.getImpactVelocityAlongNormal());
-        if (v > 1.2) this.alChocar(v, e.body.material === this.mDado);
+        if (v < 1.2) return;
+        const m = e.body.material;
+        this.alChocar(v, m === this.mDado ? 'dado' : m === this.mPared ? 'pared' : 'suelo', tipo);
       });
       this.mundo.addBody(cuerpo);
       this.dados.push({ tipo, def, cuerpo, valor: null });
@@ -103,12 +108,19 @@ export class Mesa {
       d.cuerpo.velocity.lengthSquared() < 0.05 && d.cuerpo.angularVelocity.lengthSquared() < 0.1);
     this.calma = quieto ? this.calma + 1 : 0;
     if (this.calma < 18 && this.t < 5.5) return false;
-    if (this.intentos < 5) {
+    if (this.intentos < 8) {
       let torcido = false;
       for (const d of this.dados) {
         if (this.firmeza(d) < 0.985 || d.cuerpo.position.y > d.def.radio * 1.2) {   // dado de canto o montado en otro: empujoncito
-          const p = d.cuerpo.position;                // hacia el centro, lejos de la pared o del dado vecino
-          d.cuerpo.velocity.set(-Math.sign(p.x) * rnd(4, 9), rnd(13, 17), -Math.sign(p.z) * rnd(4, 9));
+          const p = d.cuerpo.position;                // hacia el hueco libre: lejos de paredes y vecinos
+          let ax = -p.x / this.hw * 1.5, az = -p.z / this.hd * 1.5;
+          for (const o of this.dados) {
+            if (o === d) continue;
+            const dx = p.x - o.cuerpo.position.x, dz = p.z - o.cuerpo.position.z, r2 = dx * dx + dz * dz;
+            if (r2 < 16) { ax += dx / (r2 + 0.3) * 3; az += dz / (r2 + 0.3) * 3; }
+          }
+          const m = Math.hypot(ax, az) || 1;
+          d.cuerpo.velocity.set(ax / m * rnd(5, 9), rnd(13, 17), az / m * rnd(5, 9));
           d.cuerpo.angularVelocity.set(rnd(-14, 14), rnd(-14, 14), rnd(-14, 14));
           torcido = true;
         }

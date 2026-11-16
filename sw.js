@@ -1,6 +1,6 @@
 // DiceTech · service worker (red primero; la caché solo para usar sin conexión)
-const CACHE = 'dicetech-v2';
-const ARCHIVOS = ['./', 'index.html', 'app.js', 'fisica.js', 'dados.js', 'lib/three.min.js', 'lib/cannon-es.min.js',
+const CACHE = 'dicetech-v3';
+const ARCHIVOS = ['./', 'index.html', 'app.js', 'fisica.js', 'dados.js', 'textos.js', 'lib/three.min.js', 'lib/cannon-es.min.js',
   'fonts/cinzel-700.woff2', 'fonts/imfell-sc.woff2', 'manifest.json', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon-32.png'];
 const BASE = new URL('./', self.location).href;
 

@@ -19,33 +19,31 @@
 :root{
   --fondo:#0d1614; --panel:#15231f; --panel2:#1c2f29; --borde:#2c463d;
   --tinta:#ece4cf; --tenue:#9fb0a4; --oro:#d2ad63; --oro2:#a8843f; --sobreOro:#1b1407;
-  --tapete1:#245443; --tapete2:#0f2a21; --marco:#3a2616; --marco2:#1f140b;
-  --critico:#f0c75e; --especial:#5fd3b3; --exito:#7fcf7a; --fallo:#b9a79a; --pifia:#ef6a5b;
+  --critico:#f0c75e; --especial:#5fd3b3; --exito:#7fcf7a; --fallo:#c9b9ab; --pifia:#ff7a6b;
+  --madera:#2a1a0e; --madera2:#3d2716; --fieltro:#1f5743;
 }
 html[data-tema="dia"]{
-  --fondo:#ece3cf; --panel:#faf5e7; --panel2:#f1e9d6; --borde:#d3c6a8;
+  --fondo:#ece3cf; --panel:#faf5e7; --panel2:#f3ead4; --borde:#d3c6a8;
   --tinta:#27251d; --tenue:#6d6a58; --oro:#8a6420; --oro2:#6d4e15; --sobreOro:#fff8e6;
-  --critico:#a8760a; --especial:#12806a; --exito:#2e7d32; --fallo:#77695e; --pifia:#c0392b;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 html,body{margin:0;height:100%;overflow:hidden;background:var(--fondo);color:var(--tinta);
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:manipulation;overscroll-behavior:none}
+body.en-tapete{background:var(--madera)}
 button{font:inherit;color:inherit;border:0;background:none;padding:0;cursor:pointer;touch-action:manipulation}
 svg{display:block}
+[hidden]{display:none!important}
 
-#app{position:fixed;inset:0;display:flex;flex-direction:column;
-  padding:calc(10px + env(safe-area-inset-top)) 14px 8px}
-
-/* Cabecera */
-header{position:relative;display:flex;align-items:center;justify-content:space-between;height:48px;flex:none}
+/* ═════════ Selector ═════════ */
+#sel{position:fixed;inset:0;display:flex;flex-direction:column;padding:calc(10px + env(safe-area-inset-top)) 14px 8px}
+header{position:relative;display:flex;align-items:center;justify-content:space-between;height:46px;flex:none}
 h1{margin:0;position:absolute;left:0;right:0;text-align:center;pointer-events:none;
   font:400 30px/1 'IM Fell English SC',Georgia,serif;letter-spacing:.04em;color:var(--oro)}
-.redondo{width:42px;height:42px;border-radius:50%;background:var(--panel);border:1px solid var(--borde);
-  display:grid;place-items:center;color:var(--tinta)}
+.redondo{width:42px;height:42px;border-radius:50%;background:var(--panel);border:1px solid var(--borde);display:grid;place-items:center}
 .redondo svg{width:22px;height:22px}
 .con{position:relative;z-index:30}
-.menu{position:absolute;top:50px;min-width:178px;background:var(--panel);border:1px solid var(--borde);border-radius:14px;
+.menu{position:absolute;top:50px;min-width:180px;background:var(--panel);border:1px solid var(--borde);border-radius:14px;
   padding:6px;box-shadow:0 14px 34px rgba(0,0,0,.45);display:none}
 .menu.abierto{display:block}
 .con.izq .menu{left:0}.con.der .menu{right:0}
@@ -53,82 +51,102 @@ h1{margin:0;position:absolute;left:0;right:0;text-align:center;pointer-events:no
 .menu button.activo{background:var(--panel2);color:var(--oro);font-weight:600}
 .menu button svg{width:20px;height:20px;flex:none}
 
-/* Modos */
-.modos{flex:none;display:flex;gap:6px;margin-top:8px;padding:4px;background:var(--panel);border:1px solid var(--borde);border-radius:14px}
-.modos button{flex:1;height:38px;border-radius:10px;font:400 19px/1 'IM Fell English SC',Georgia,serif;letter-spacing:.03em;color:var(--tenue)}
-.modos button.activo{background:var(--oro);color:var(--sobreOro)}
-
-/* Resultado */
-#res{flex:none;height:78px;margin-top:8px;display:flex;align-items:center;gap:14px;padding:0 4px}
-#resNum{min-width:92px;text-align:center;font:700 54px/1 'Cinzel',Georgia,serif;color:var(--tinta);font-variant-numeric:lining-nums}
-#resNum.larga{font-size:44px}
-#resTxt{flex:1;min-width:0}
-#resNivel{font:400 26px/1.05 'IM Fell English SC',Georgia,serif;letter-spacing:.02em}
-#resDet{margin-top:5px;font-size:14px;line-height:1.25;color:var(--tenue);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-#res.pista #resNum{display:none}
-#res.pista #resNivel{font-size:21px;color:var(--tenue)}
-#res[data-n="critico"] #resNivel,#res[data-n="critico"] #resNum{color:var(--critico)}
-#res[data-n="especial"] #resNivel,#res[data-n="especial"] #resNum{color:var(--especial)}
-#res[data-n="exito"] #resNivel,#res[data-n="exito"] #resNum{color:var(--exito)}
-#res[data-n="fallo"] #resNivel,#res[data-n="fallo"] #resNum{color:var(--fallo)}
-#res[data-n="pifia"] #resNivel,#res[data-n="pifia"] #resNum{color:var(--pifia)}
-#res.entra #resNum,#res.entra #resNivel{animation:entra .32s cubic-bezier(.2,1.5,.4,1)}
-@keyframes entra{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
-
-/* Bandeja */
-#marco{flex:1;min-height:150px;margin-top:6px;padding:9px;border-radius:22px;
-  background:linear-gradient(145deg,var(--marco),var(--marco2));box-shadow:0 8px 22px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.12)}
-#bandeja{position:relative;width:100%;height:100%;border-radius:14px;overflow:hidden;
-  background:radial-gradient(120% 90% at 50% 35%,var(--tapete1),var(--tapete2));
-  box-shadow:inset 0 0 26px rgba(0,0,0,.6), inset 0 0 0 1px rgba(0,0,0,.5)}
-#bandeja canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
-
-/* Panel */
-#panel{flex:none;margin-top:10px}
-.fila{display:flex;align-items:center;gap:8px}
-.etq{font-size:13px;letter-spacing:.09em;text-transform:uppercase;color:var(--tenue)}
-.paso{height:46px;min-width:46px;padding:0 10px;border-radius:12px;background:var(--panel);border:1px solid var(--borde);
-  font-weight:600;font-size:17px;font-variant-numeric:tabular-nums}
-.paso:active,.dado:active,.redondo:active{transform:scale(.95)}
-#hab{flex:1;min-width:0;height:46px;border-radius:12px;border:1px solid var(--oro2);background:var(--panel2);color:var(--tinta);
-  text-align:center;font:700 26px/1 'Cinzel',Georgia,serif;-webkit-user-select:text;user-select:text;-moz-appearance:textfield;appearance:textfield}
+/* Tarjeta Cthulhu */
+#cth{flex:none;margin-top:10px;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 8px;border-radius:20px;
+  background:var(--panel);border:1.5px solid var(--borde);transition:border-color .2s, box-shadow .2s}
+#cth.activa{border-color:var(--oro);box-shadow:0 0 0 3px rgba(210,173,99,.18), 0 6px 18px rgba(0,0,0,.25)}
+#cth canvas{width:64px;height:64px;flex:none}
+.cthTxt{flex:1;min-width:0}
+.cthT{font:400 22px/1.05 'IM Fell English SC',Georgia,serif;color:var(--oro);white-space:nowrap}
+.cthS{margin-top:3px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--tenue)}
+.paso{display:grid;place-items:center;width:42px;height:46px;border-radius:13px;background:var(--panel2);border:1px solid var(--borde);
+  font-size:24px;font-weight:500;line-height:1;flex:none}
+.paso:active,.celda:active,.redondo:active,.menos:active{transform:scale(.94)}
+#hab{width:66px;height:46px;border-radius:13px;border:1px solid var(--oro2);background:var(--fondo);color:var(--tinta);flex:none;
+  text-align:center;font:700 26px/1 'Cinzel',Georgia,serif;-webkit-user-select:text;user-select:text;appearance:textfield;-moz-appearance:textfield}
 #hab::-webkit-outer-spin-button,#hab::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-.dados{display:flex;gap:6px}
-.dado{position:relative;flex:1;height:46px;border-radius:12px;background:var(--panel);border:1px solid var(--borde);
-  font-weight:700;font-size:14px;letter-spacing:-.01em}
-.dado i{position:absolute;left:8px;right:8px;bottom:5px;height:4px;border-radius:2px;background:var(--c)}
-.dado span{display:block;margin-top:-6px}
-.dado b{position:absolute;top:-7px;right:-5px;min-width:21px;height:21px;padding:0 5px;border-radius:11px;
-  background:var(--oro);color:var(--sobreOro);font-size:13px;line-height:21px;display:none}
-.dado.con b{display:block}
-.dado.con{border-color:var(--oro2);background:var(--panel2)}
-#modVal{min-width:54px;text-align:center;font:700 22px/1 'Cinzel',Georgia,serif}
-.hueco{flex:1}
-.gordo{width:100%;height:58px;margin-top:10px;border-radius:16px;
+.paso.mini{width:38px}
+
+.separa{flex:none;display:flex;align-items:center;gap:12px;margin:12px 4px 10px;font:400 17px/1 'IM Fell English SC',Georgia,serif;color:var(--tenue)}
+.separa::before,.separa::after{content:'';flex:1;height:1px;background:var(--borde)}
+
+/* Rejilla de dados */
+#rejilla{flex:1;min-height:0;display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);gap:9px}
+.celda{position:relative;min-height:0;border-radius:18px;background:var(--panel);border:1.5px solid var(--borde);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;transition:opacity .2s,border-color .2s}
+.celda canvas{width:76px;height:76px;max-height:calc(100% - 22px);aspect-ratio:1;object-fit:contain;pointer-events:none}
+.celda .nom{font:700 15px/1 'Cinzel',Georgia,serif;letter-spacing:.02em;pointer-events:none}
+.celda .cuenta{position:absolute;top:7px;right:7px;min-width:28px;height:28px;padding:0 7px;border-radius:14px;
+  background:var(--oro);color:var(--sobreOro);font:700 16px/28px 'Cinzel',Georgia,serif;text-align:center;display:none;pointer-events:none}
+.celda .menos{position:absolute;top:5px;left:5px;width:34px;height:34px;border-radius:50%;background:var(--fondo);
+  border:1px solid var(--borde);font-size:24px;line-height:1;display:none;place-items:center;color:var(--tinta)}
+.celda.con{border-color:var(--oro2);background:var(--panel2)}
+.celda.con .cuenta{display:block}.celda.con .menos{display:grid}
+#rejilla.apagada .celda.dado{opacity:.5}
+.celda.mod{grid-column:span 2;display:grid;grid-template-columns:auto 1fr auto;grid-template-rows:auto auto;align-content:center;column-gap:8px;row-gap:6px;padding:0 12px}
+.mod .modTxt{grid-column:1/-1;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--tenue);text-align:center}
+#modVal{grid-row:2;grid-column:2;align-self:center;text-align:center;font:700 24px/1 'Cinzel',Georgia,serif}
+#rejilla.apagada .celda.mod{opacity:.5}
+
+/* Resumen y lanzar */
+.resumen{flex:none;display:flex;align-items:center;gap:10px;min-height:34px;margin-top:10px;padding:0 4px}
+#resumen{flex:1;min-width:0;font-size:16px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#resumen b{font:700 17px 'Cinzel',Georgia,serif;color:var(--oro)}
+#btnVaciar{height:34px;padding:0 12px;border-radius:17px;border:1px solid var(--borde);font-size:14px;color:var(--tenue)}
+#btnLanzar{flex:none;display:flex;align-items:center;justify-content:center;gap:12px;width:100%;height:62px;margin-top:8px;border-radius:18px;
   background:linear-gradient(180deg,var(--oro),var(--oro2));color:var(--sobreOro);
-  font:700 22px/1 'Cinzel',Georgia,serif;letter-spacing:.08em;text-transform:uppercase;
+  font:700 25px/1 'Cinzel',Georgia,serif;letter-spacing:.08em;text-transform:uppercase;
   box-shadow:0 5px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35)}
-.gordo{display:flex;align-items:center;justify-content:center;gap:12px}
+#btnLanzar:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
 #icoAgita{width:32px;height:26px;flex:none;display:none;transform-origin:50% 60%}
 body.agita #icoAgita{display:block}
-#icoAgita.menea{animation:menea .9s ease-in-out}
+.menea{animation:menea .9s ease-in-out}
 @keyframes menea{0%,100%{transform:rotate(0)}15%{transform:rotate(-16deg)}30%{transform:rotate(14deg)}45%{transform:rotate(-12deg)}60%{transform:rotate(10deg)}80%{transform:rotate(-5deg)}}
-#lineaAgita{display:block;width:100%;height:28px;margin-top:6px;font-size:14px;color:var(--tenue);text-align:center}
-body.agita #lineaAgita{color:var(--oro)}
-.gordo:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
-.gordo[disabled]{opacity:.55}
-[hidden]{display:none!important}
 
-footer{flex:none;display:flex;align-items:center;justify-content:space-between;margin-top:2px;height:34px;font-size:14px;color:var(--tenue)}
-footer button{display:flex;align-items:center;gap:6px;height:34px;padding:0 6px}
-footer svg{width:18px;height:18px}
+footer{flex:none;display:flex;align-items:center;justify-content:space-between;margin-top:8px;height:36px;font-size:14px;color:var(--tenue)}
+footer button{display:flex;align-items:center;gap:6px;height:36px;padding:0 6px}
+footer svg{width:19px;height:19px}
+#btnAgitar.off{opacity:.45}
+
+/* ═════════ Tapete ═════════ */
+#tapete{position:fixed;inset:0;z-index:40;display:none;background:linear-gradient(180deg,var(--madera2),var(--madera))}
+#tapete.abierto{display:block}
+#fieltro{position:absolute;inset:7px;border-radius:38px;background-color:var(--fieltro);
+  background-image:radial-gradient(130% 85% at 50% 42%,rgba(255,255,255,.09),rgba(0,0,0,.34)),var(--ruido,none);
+  box-shadow:inset 0 0 46px rgba(0,0,0,.6),inset 0 0 0 1px rgba(0,0,0,.65),0 0 0 1px rgba(255,255,255,.06)}
+#lienzo{position:absolute;inset:0;width:100%;height:100%;display:block}
+#pista{position:absolute;left:12%;right:12%;top:50%;transform:translateY(-50%);text-align:center;pointer-events:none;
+  font:400 27px/1.25 'IM Fell English SC',Georgia,serif;letter-spacing:.03em;color:#f1e7cc;text-shadow:0 2px 10px rgba(0,0,0,.5);
+  animation:latido 2.6s ease-in-out infinite;transition:opacity .35s}
+#pista.fuera{opacity:0!important;animation:none}
+@keyframes latido{0%,100%{opacity:.2}50%{opacity:.78}}
+#resT{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);
+  min-width:210px;max-width:calc(100% - 36px);padding:12px 22px 11px;border-radius:24px;text-align:center;pointer-events:none;
+  background:rgba(6,16,12,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.09);
+  color:#ece4cf;display:none}
+#resT.ver{display:block;animation:entra .35s cubic-bezier(.2,1.4,.4,1)}
+@keyframes entra{from{transform:translateX(-50%) scale(.7);opacity:0}to{transform:translateX(-50%);opacity:1}}
+#resN{font:700 54px/1 'Cinzel',Georgia,serif}
+#resNiv{margin-top:3px;font:400 25px/1.05 'IM Fell English SC',Georgia,serif}
+#resDet{margin-top:5px;font-size:14px;line-height:1.3;color:#b7c4ba;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+#resOtra{margin-top:7px;font-size:13px;color:#8fa196}
+#resT[data-n="critico"] #resN,#resT[data-n="critico"] #resNiv{color:#f0c75e}
+#resT[data-n="especial"] #resN,#resT[data-n="especial"] #resNiv{color:#5fd3b3}
+#resT[data-n="exito"] #resN,#resT[data-n="exito"] #resNiv{color:#8fe08a}
+#resT[data-n="fallo"] #resN,#resT[data-n="fallo"] #resNiv{color:#d8cabd}
+#resT[data-n="pifia"] #resN,#resT[data-n="pifia"] #resNiv{color:#ff7a6b}
+.flota{position:absolute;left:18px;right:18px;bottom:22px;display:flex;justify-content:space-between;pointer-events:none}
+.flota button{pointer-events:auto;display:flex;align-items:center;gap:8px;height:50px;padding:0 18px 0 14px;border-radius:25px;
+  background:rgba(6,16,12,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.14);
+  color:#ece4cf;font-size:16px;font-weight:600}
+.flota button:active{transform:scale(.95)}
+.flota svg{width:22px;height:22px}
 
 /* Ventanas */
 #velo{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center}
 #velo.abierto{display:flex}
 #hoja{width:100%;max-width:520px;max-height:78%;display:flex;flex-direction:column;background:var(--panel);
-  border-radius:22px 22px 0 0;border:1px solid var(--borde);border-bottom:0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));
-  animation:sube .25s ease-out}
+  border-radius:22px 22px 0 0;border:1px solid var(--borde);border-bottom:0;padding:18px 16px calc(16px + env(safe-area-inset-bottom));animation:sube .25s ease-out}
 @keyframes sube{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 #hojaT{margin:0 0 10px;font:400 26px/1 'IM Fell English SC',Georgia,serif;color:var(--oro);text-align:center}
 #hojaC{flex:1;overflow:auto;-webkit-overflow-scrolling:touch;font-size:16px;line-height:1.5}
@@ -137,29 +155,29 @@ footer svg{width:18px;height:18px}
 .tir .n{min-width:58px;text-align:center;font:700 26px/1 'Cinzel',Georgia,serif}
 .tir .d{flex:1;min-width:0;font-size:15px;line-height:1.3}
 .tir .d small{display:block;color:var(--tenue);font-size:13px}
+html[data-tema="dia"] .tir{--critico:#a8760a;--especial:#12806a;--exito:#2e7d32;--fallo:#77695e;--pifia:#c0392b}
 .tir[data-n="critico"] .n{color:var(--critico)}.tir[data-n="especial"] .n{color:var(--especial)}
 .tir[data-n="exito"] .n{color:var(--exito)}.tir[data-n="fallo"] .n{color:var(--fallo)}.tir[data-n="pifia"] .n{color:var(--pifia)}
 .hojaB{display:flex;gap:8px;margin-top:12px}
 .hojaB button{flex:1;height:48px;border-radius:13px;background:var(--panel2);border:1px solid var(--borde);font-size:16px;font-weight:600}
 .hojaB button.pral{background:var(--oro);color:var(--sobreOro);border-color:transparent}
 
-#aviso{position:fixed;left:50%;bottom:120px;transform:translate(-50%,20px);z-index:60;background:var(--tinta);color:var(--fondo);
-  padding:10px 16px;border-radius:999px;font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:.25s}
+#aviso{position:fixed;left:50%;bottom:130px;transform:translate(-50%,20px);z-index:60;background:var(--tinta);color:var(--fondo);
+  padding:10px 16px;border-radius:999px;font-size:15px;font-weight:600;opacity:0;pointer-events:none;transition:.25s;white-space:nowrap}
 #aviso.ver{opacity:1;transform:translate(-50%,0)}
-
 #gira{position:fixed;inset:0;z-index:90;background:var(--fondo);display:none;place-items:center;
   font:400 28px/1 'IM Fell English SC',Georgia,serif;color:var(--oro)}
 @media (orientation:landscape) and (max-height:520px){#gira{display:grid}}
-@media (max-height:640px){#res{height:62px}#resNum{font-size:44px}.gordo{height:52px}}
-@media (prefers-reduced-motion:reduce){#icoAgita.menea{animation:none}#res.entra #resNum,#res.entra #resNivel,#hoja{animation:none}}
+@media (max-height:700px){#cth canvas{width:54px;height:54px}.celda canvas{width:62px;height:62px}#btnLanzar{height:56px}.separa{margin:8px 4px 7px}}
+@media (prefers-reduced-motion:reduce){.menea,#hoja,#resT.ver{animation:none}#pista{animation:none;opacity:.6}}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="sel">
   <header>
     <div class="con izq">
       <button class="redondo" id="btnIdioma" aria-label="Idioma">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.6 2.4 4 5.6 4 9s-1.4 6.600-4 9c-2.6-2.4-4-5.600-4-9s1.400-6.600 4-9z"/></svg>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.600 2.400 4 5.600 4 9s-1.400 6.600-4 9c-2.600-2.400-4-5.600-4-9s1.400-6.600 4-9z"/></svg>
       </button>
       <div class="menu" id="menuIdioma"></div>
     </div>
@@ -170,44 +188,22 @@ footer svg{width:18px;height:18px}
     </div>
   </header>
 
-  <nav class="modos">
-    <button data-modo="cth" id="tabCth"></button>
-    <button data-modo="libre" id="tabLibre"></button>
-  </nav>
-
-  <section id="res" class="pista" aria-live="polite">
-    <div id="resNum"></div>
-    <div id="resTxt"><div id="resNivel"></div><div id="resDet"></div></div>
+  <section id="cth">
+    <canvas data-mini="cth"></canvas>
+    <div class="cthTxt"><div class="cthT" id="cthT"></div><div class="cthS" id="cthS"></div></div>
+    <button class="paso" data-hab="-1" aria-label="−">−</button>
+    <input id="hab" type="number" inputmode="numeric" min="1" max="99">
+    <button class="paso" data-hab="1" aria-label="+">+</button>
   </section>
 
-  <div id="marco"><div id="bandeja"><canvas id="lienzo"></canvas></div></div>
+  <div class="separa" id="separa"></div>
 
-  <section id="panel">
-    <div id="panelCth">
-      <div class="fila">
-        <button class="paso" data-hab="-10">−10</button>
-        <button class="paso" data-hab="-1">−1</button>
-        <input id="hab" type="number" inputmode="numeric" min="1" max="99" aria-label="Habilidad">
-        <button class="paso" data-hab="1">+1</button>
-        <button class="paso" data-hab="10">+10</button>
-      </div>
-    </div>
-    <div id="panelLibre" hidden>
-      <div class="dados" id="dados"></div>
-      <div class="fila" style="margin-top:10px">
-        <span class="etq" id="etqMod"></span>
-        <span class="hueco"></span>
-        <button class="paso" data-mod="-1">−</button>
-        <span id="modVal">+0</span>
-        <button class="paso" data-mod="1">+</button>
-        <button class="paso" id="btnVaciar"></button>
-      </div>
-    </div>
-    <button class="gordo" id="btnTirar"><span id="txtTirar"></span>
-      <svg id="icoAgita" viewBox="0 0 30 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="10" y="2.500" width="10" height="19" rx="2.400"/><path d="M13.500 18h3"/><path d="M5.500 8.500c-1.300 2.200-1.300 4.800 0 7M2 6.500c-2 3.400-2 7.600 0 11M24.500 8.500c1.300 2.200 1.300 4.800 0 7M28 6.500c2 3.400 2 7.600 0 11"/></svg>
-    </button>
-    <button id="lineaAgita" hidden></button>
-  </section>
+  <section id="rejilla"></section>
+
+  <div class="resumen"><div id="resumen"></div><button id="btnVaciar"></button></div>
+  <button id="btnLanzar"><span id="txtLanzar"></span>
+    <svg id="icoAgita" viewBox="0 0 30 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="10" y="2.500" width="10" height="19" rx="2.400"/><path d="M13.500 18h3"/><path d="M5.500 8.500c-1.300 2.200-1.300 4.800 0 7M2 6.500c-2 3.400-2 7.600 0 11M24.500 8.500c1.300 2.200 1.300 4.800 0 7M28 6.500c2 3.400 2 7.600 0 11"/></svg>
+  </button>
 
   <footer>
     <button id="btnHist">
@@ -215,8 +211,20 @@ footer svg{width:18px;height:18px}
       <span id="txtHist"></span>
     </button>
     <button id="btnSonido" aria-label="Sonido"></button>
+    <button id="btnAgitar"></button>
     <button id="btnLegal"></button>
   </footer>
+</div>
+
+<div id="tapete">
+  <div id="fieltro"></div>
+  <canvas id="lienzo"></canvas>
+  <div id="pista"></div>
+  <div id="resT" aria-live="polite"><div id="resN"></div><div id="resNiv"></div><div id="resDet"></div><div id="resOtra"></div></div>
+  <div class="flota">
+    <button id="btnVolver"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.200" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg><span id="txtVolver"></span></button>
+    <button id="btnRepetir" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 12a8 8 0 1 1-2.300-5.700"/><path d="M20 4v5h-5"/></svg><span id="txtRepetir"></span></button>
+  </div>
 </div>
 
 <div id="velo"><div id="hoja"><h2 id="hojaT"></h2><div id="hojaC"></div><div class="hojaB" id="hojaB"></div></div></div>
