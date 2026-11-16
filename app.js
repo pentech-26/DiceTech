@@ -11,7 +11,7 @@ const lee = (k, d) => { try { const v = localStorage.getItem(k); return v == nul
 
 /* ───────────── Textos ───────────── */
 const T = {
-  es: { cth: 'Cthulhu', libre: 'Libre', tirarD100: 'Tirar d100', tirar: 'Tirar', vaciar: 'Vaciar', mod: 'Modificador',
+  es: { cth: 'Cthulhu', oAgita: 'o agita el móvil', activaAgita: 'Toca aquí para activar agitar', agitaNo: 'El móvil no ha dado permiso para agitar', libre: 'Libre', tirarD100: 'Tirar d100', tirar: 'Tirar', vaciar: 'Vaciar', mod: 'Modificador',
     pistaCth: 'Pon la habilidad y tira', pistaLibre: 'Elige los dados y tira', rodando: 'Rodando…',
     critico: '¡Crítico!', especial: 'Éxito especial', exito: 'Éxito', fallo: 'Fallo', pifia: '¡Pifia!',
     umbral: 'Habilidad {h} % · especial hasta {e}', historial: 'Historial', sinTiradas: 'Todavía no hay tiradas.',
@@ -20,7 +20,7 @@ const T = {
     textoLegal: ['Lanzador de dados no oficial, creado de forma independiente por PenTech. No está afiliado, patrocinado ni aprobado por Chaosium Inc. ni por ninguna editorial.',
       'La Llamada de Cthulhu (Call of Cthulhu) es una marca registrada de Chaosium Inc. Para jugar necesitas el manual del juego.',
       'Usa las librerías three.js y cannon-es (licencia MIT) y las tipografías Cinzel e IM Fell English SC (licencia OFL).'] },
-  ca: { cth: 'Cthulhu', libre: 'Lliure', tirarD100: 'Tirar d100', tirar: 'Tirar', vaciar: 'Buidar', mod: 'Modificador',
+  ca: { cth: 'Cthulhu', oAgita: 'o sacseja el mòbil', activaAgita: 'Toca aquí per activar sacsejar', agitaNo: 'El mòbil no ha donat permís per sacsejar', libre: 'Lliure', tirarD100: 'Tirar d100', tirar: 'Tirar', vaciar: 'Buidar', mod: 'Modificador',
     pistaCth: 'Posa l’habilitat i tira', pistaLibre: 'Tria els daus i tira', rodando: 'Rodant…',
     critico: 'Crític!', especial: 'Èxit especial', exito: 'Èxit', fallo: 'Fallada', pifia: 'Pífia!',
     umbral: 'Habilitat {h} % · especial fins a {e}', historial: 'Historial', sinTiradas: 'Encara no hi ha tirades.',
@@ -29,7 +29,7 @@ const T = {
     textoLegal: ['Llançador de daus no oficial, creat de manera independent per PenTech. No està afiliat, patrocinat ni aprovat per Chaosium Inc. ni per cap editorial.',
       'La Crida de Cthulhu (Call of Cthulhu) és una marca registrada de Chaosium Inc. Per jugar necessites el manual del joc.',
       'Fa servir les llibreries three.js i cannon-es (llicència MIT) i les tipografies Cinzel i IM Fell English SC (llicència OFL).'] },
-  en: { cth: 'Cthulhu', libre: 'Free', tirarD100: 'Roll d100', tirar: 'Roll', vaciar: 'Clear', mod: 'Modifier',
+  en: { cth: 'Cthulhu', oAgita: 'or shake your phone', activaAgita: 'Tap here to turn on shake', agitaNo: 'The phone did not allow motion access', libre: 'Free', tirarD100: 'Roll d100', tirar: 'Roll', vaciar: 'Clear', mod: 'Modifier',
     pistaCth: 'Set the skill and roll', pistaLibre: 'Pick your dice and roll', rodando: 'Rolling…',
     critico: 'Critical!', especial: 'Special success', exito: 'Success', fallo: 'Failure', pifia: 'Fumble!',
     umbral: 'Skill {h}% · special up to {e}', historial: 'History', sinTiradas: 'No rolls yet.',
@@ -38,7 +38,7 @@ const T = {
     textoLegal: ['Unofficial dice roller, independently created by PenTech. Not affiliated with, sponsored or endorsed by Chaosium Inc. or any publisher.',
       'Call of Cthulhu is a registered trademark of Chaosium Inc. You need the game rulebook to play.',
       'Uses the three.js and cannon-es libraries (MIT licence) and the Cinzel and IM Fell English SC typefaces (OFL licence).'] },
-  fr: { cth: 'Cthulhu', libre: 'Libre', tirarD100: 'Lancer le d100', tirar: 'Lancer', vaciar: 'Vider', mod: 'Modificateur',
+  fr: { cth: 'Cthulhu', oAgita: 'ou secouez le téléphone', activaAgita: 'Touchez ici pour activer la secousse', agitaNo: 'Le téléphone n’a pas autorisé le mouvement', libre: 'Libre', tirarD100: 'Lancer le d100', tirar: 'Lancer', vaciar: 'Vider', mod: 'Modificateur',
     pistaCth: 'Réglez la compétence et lancez', pistaLibre: 'Choisissez les dés et lancez', rodando: 'Ça roule…',
     critico: 'Critique !', especial: 'Réussite spéciale', exito: 'Réussite', fallo: 'Échec', pifia: 'Maladresse !',
     umbral: 'Compétence {h} % · spéciale jusqu’à {e}', historial: 'Historique', sinTiradas: 'Aucun lancer pour l’instant.',
@@ -47,7 +47,7 @@ const T = {
     textoLegal: ['Lanceur de dés non officiel, créé de manière indépendante par PenTech. Il n’est ni affilié, ni sponsorisé, ni approuvé par Chaosium Inc. ou par un éditeur.',
       'L’Appel de Cthulhu (Call of Cthulhu) est une marque déposée de Chaosium Inc. Pour jouer, il vous faut le livre de règles.',
       'Utilise les bibliothèques three.js et cannon-es (licence MIT) et les polices Cinzel et IM Fell English SC (licence OFL).'] },
-  de: { cth: 'Cthulhu', libre: 'Frei', tirarD100: 'W100 würfeln', tirar: 'Würfeln', vaciar: 'Leeren', mod: 'Modifikator',
+  de: { cth: 'Cthulhu', oAgita: 'oder Handy schütteln', activaAgita: 'Hier tippen, um Schütteln zu aktivieren', agitaNo: 'Das Handy hat die Bewegung nicht erlaubt', libre: 'Frei', tirarD100: 'W100 würfeln', tirar: 'Würfeln', vaciar: 'Leeren', mod: 'Modifikator',
     pistaCth: 'Fertigkeit einstellen und würfeln', pistaLibre: 'Würfel wählen und werfen', rodando: 'Rollt…',
     critico: 'Kritisch!', especial: 'Besonderer Erfolg', exito: 'Erfolg', fallo: 'Misserfolg', pifia: 'Patzer!',
     umbral: 'Fertigkeit {h} % · besonders bis {e}', historial: 'Verlauf', sinTiradas: 'Noch keine Würfe.',
@@ -56,7 +56,7 @@ const T = {
     textoLegal: ['Inoffizieller Würfelwerfer, unabhängig von PenTech erstellt. Nicht mit Chaosium Inc. oder einem Verlag verbunden, von ihnen gesponsert oder genehmigt.',
       'Call of Cthulhu ist eine eingetragene Marke von Chaosium Inc. Zum Spielen brauchst du das Regelwerk.',
       'Verwendet die Bibliotheken three.js und cannon-es (MIT-Lizenz) sowie die Schriften Cinzel und IM Fell English SC (OFL-Lizenz).'] },
-  it: { cth: 'Cthulhu', libre: 'Libero', tirarD100: 'Tira il d100', tirar: 'Tira', vaciar: 'Svuota', mod: 'Modificatore',
+  it: { cth: 'Cthulhu', oAgita: 'o scuoti il telefono', activaAgita: 'Tocca qui per attivare lo scuotimento', agitaNo: 'Il telefono non ha dato il permesso al movimento', libre: 'Libero', tirarD100: 'Tira il d100', tirar: 'Tira', vaciar: 'Svuota', mod: 'Modificatore',
     pistaCth: 'Imposta l’abilità e tira', pistaLibre: 'Scegli i dadi e tira', rodando: 'Rotola…',
     critico: 'Critico!', especial: 'Successo speciale', exito: 'Successo', fallo: 'Fallimento', pifia: 'Disastro!',
     umbral: 'Abilità {h} % · speciale fino a {e}', historial: 'Cronologia', sinTiradas: 'Ancora nessun tiro.',
@@ -285,7 +285,7 @@ function cuadro(ts) {
 /* ───────────── Tiradas ───────────── */
 const sinMov = () => window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-function tirar() {
+function tirar(fuerza) {
   if (rodando) return;
   despiertaAudio();
   cierraMenus();
@@ -297,7 +297,7 @@ function tirar() {
     if (!tipos.length) return aviso(t.eligeDados);
   }
   for (const m of mallas) escena.remove(m.malla);
-  mallas = mesa.lanzar(tipos).map(dado => {
+  mallas = mesa.lanzar(tipos, typeof fuerza === 'number' ? fuerza : 1).map(dado => {
     const p = pieza(dado.tipo), malla = new THREE.Mesh(p.geo, p.mat);
     malla.castShadow = true;
     escena.add(malla);
@@ -335,6 +335,7 @@ function fin() {
   historial = historial.slice(0, 100);
   guarda('dicetech-historial-v1', historial);
   $('#btnTirar').disabled = false;
+  ultimoFin = performance.now();
   pintaResultado(true);
   if (navigator.vibrate) { try { navigator.vibrate(reg.n === 'pifia' || reg.n === 'critico' ? [40, 60, 40] : 25); } catch (e) {} }
 }
@@ -345,6 +346,64 @@ function desglose(reg) {
   let s = ORDEN.filter(k => por[k]).map(k => `${por[k].length > 1 ? por[k].length : ''}${k} (${por[k].join(', ')})`).join(' + ');
   if (reg.mod) s += (reg.mod > 0 ? ' + ' : ' − ') + Math.abs(reg.mod);
   return s;
+}
+
+/* ───────────── Agitar el móvil ───────────── */
+const puedeAgitar = 'DeviceMotionEvent' in window && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
+const pidePermiso = puedeAgitar && typeof DeviceMotionEvent.requestPermission === 'function';   // iPhone
+let agitar = lee('dicetech-agitar', null);      // true, false o null (sin decidir)
+let escucha = false, denegado = false, ultimoFin = 0, golpes = [], pico = 0;
+
+function alMover(e) {
+  if (!agitar || rodando || document.hidden || $('#velo').classList.contains('abierto')) return;
+  let m;
+  const a = e.acceleration;
+  if (a && a.x != null) m = Math.hypot(a.x, a.y, a.z);
+  else {
+    const g = e.accelerationIncludingGravity;
+    if (!g || g.x == null) return;
+    m = Math.abs(Math.hypot(g.x, g.y, g.z) - 9.81);
+  }
+  const ahora = performance.now();
+  if (ahora - ultimoFin < 700) return;                       // un respiro tras cada tirada
+  golpes = golpes.filter(x => ahora - x < 650);
+  if (!golpes.length) pico = 0;
+  if (m < 13) return;
+  pico = Math.max(pico, m);
+  if (!golpes.length || ahora - golpes[golpes.length - 1] > 70) golpes.push(ahora);
+  if (golpes.length >= 3) {                                  // tres sacudidas seguidas: meneo decidido
+    const fuerza = Math.max(0.85, Math.min(1.45, pico / 22));
+    golpes = []; pico = 0;
+    tirar(fuerza);
+  }
+}
+
+function activaAgitar(desdeLinea) {
+  if (!puedeAgitar || denegado) return;
+  const listo = () => {
+    agitar = true; guarda('dicetech-agitar', true);
+    if (!escucha) { window.addEventListener('devicemotion', alMover); escucha = true; }
+    pintaAgitar(true);
+  };
+  if (!pidePermiso) return listo();
+  let p;
+  try { p = DeviceMotionEvent.requestPermission(); } catch (e) { return; }      // tiene que salir de un toque
+  p.then(r => {
+    if (r === 'granted') return listo();
+    denegado = true; pintaAgitar();
+    if (desdeLinea) aviso(t.agitaNo);
+  }).catch(() => {});
+}
+
+function pintaAgitar(saluda) {
+  const linea = $('#lineaAgita'), activo = puedeAgitar && !denegado && agitar === true && escucha;
+  document.body.classList.toggle('agita', activo);
+  linea.hidden = !puedeAgitar || denegado;
+  linea.textContent = activo ? t.oAgita : t.activaAgita;
+  if (activo && saluda) {
+    const ico = $('#icoAgita');
+    ico.classList.remove('menea'); void ico.getBoundingClientRect(); ico.classList.add('menea');
+  }
 }
 
 /* ───────────── Interfaz ───────────── */
@@ -384,7 +443,8 @@ function pintaPanel() {
   $('#panelCth').hidden = modo !== 'cth';
   $('#panelLibre').hidden = modo !== 'libre';
   document.querySelectorAll('.modos button').forEach(b => b.classList.toggle('activo', b.dataset.modo === modo));
-  $('#btnTirar').textContent = modo === 'cth' ? t.tirarD100 : t.tirar;
+  $('#txtTirar').textContent = modo === 'cth' ? t.tirarD100 : t.tirar;
+  pintaAgitar();
   $('#hab').value = hab;
   $('#modVal').textContent = (mod >= 0 ? '+' : '−') + Math.abs(mod);
   document.querySelectorAll('.dado').forEach(b => {
@@ -451,6 +511,7 @@ function abreHistorial() {
 $('#dados').innerHTML = ORDEN.map(k => `<button class="dado" data-d="${k}" style="--c:${COLOR[k].base}"><span>${k}</span><i></i><b>0</b></button>`).join('');
 
 document.addEventListener('click', e => {
+  if (agitar === true && !escucha && !denegado) activaAgitar();      // en iPhone el permiso se renueva con el primer toque
   const el = e.target.closest('button, #bandeja, #velo');
   if (!el) return cierraMenus();
   if (el.id === 'btnIdioma') return alternaMenu('#menuIdioma');
@@ -468,6 +529,10 @@ document.addEventListener('click', e => {
   }
   if (el.id === 'btnVaciar') { for (const k of ORDEN) libre[k] = 0; mod = 0; guarda('dicetech-libre', libre); guarda('dicetech-mod', 0); return pintaPanel(); }
   if (el.id === 'btnTirar' || el.id === 'bandeja') return tirar();
+  if (el.id === 'lineaAgita') {
+    if (agitar === true && escucha) { agitar = false; guarda('dicetech-agitar', false); return pintaAgitar(); }
+    return activaAgitar(true);
+  }
   if (el.id === 'btnHist') return abreHistorial();
   if (el.id === 'btnSonido') { sonido = !sonido; guarda('dicetech-sonido', sonido); if (sonido) despiertaAudio(); return pintaTema(); }
   if (el.id === 'btnLegal') return abreHoja(t.legal, t.textoLegal.map(p => `<p>${p}</p>`).join('') + '<p style="color:var(--tenue)">DiceTech · ' + VERSION + ' · by PenTech</p>', [['cerrar', t.cerrar, 1]]);
@@ -485,6 +550,7 @@ document.addEventListener('gesturestart', e => e.preventDefault());
 
 /* ───────────── Arranque ───────────── */
 aplicaIdioma();
+if (puedeAgitar && agitar !== false) activaAgitar();     // Android se activa solo; el iPhone lo rechaza sin toque y espera a la línea o al primer toque
 new ResizeObserver(ajusta).observe(bandeja);
 ajusta();
 (document.fonts && document.fonts.load ? Promise.race([document.fonts.load('700 40px Cinzel'), new Promise(r => setTimeout(r, 1500))]) : Promise.resolve())

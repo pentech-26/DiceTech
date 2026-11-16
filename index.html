@@ -108,11 +108,18 @@ h1{margin:0;position:absolute;left:0;right:0;text-align:center;pointer-events:no
   background:linear-gradient(180deg,var(--oro),var(--oro2));color:var(--sobreOro);
   font:700 22px/1 'Cinzel',Georgia,serif;letter-spacing:.08em;text-transform:uppercase;
   box-shadow:0 5px 0 rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.35)}
+.gordo{display:flex;align-items:center;justify-content:center;gap:12px}
+#icoAgita{width:32px;height:26px;flex:none;display:none;transform-origin:50% 60%}
+body.agita #icoAgita{display:block}
+#icoAgita.menea{animation:menea .9s ease-in-out}
+@keyframes menea{0%,100%{transform:rotate(0)}15%{transform:rotate(-16deg)}30%{transform:rotate(14deg)}45%{transform:rotate(-12deg)}60%{transform:rotate(10deg)}80%{transform:rotate(-5deg)}}
+#lineaAgita{display:block;width:100%;height:28px;margin-top:6px;font-size:14px;color:var(--tenue);text-align:center}
+body.agita #lineaAgita{color:var(--oro)}
 .gordo:active{transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.35)}
 .gordo[disabled]{opacity:.55}
 [hidden]{display:none!important}
 
-footer{flex:none;display:flex;align-items:center;justify-content:space-between;margin-top:8px;height:34px;font-size:14px;color:var(--tenue)}
+footer{flex:none;display:flex;align-items:center;justify-content:space-between;margin-top:2px;height:34px;font-size:14px;color:var(--tenue)}
 footer button{display:flex;align-items:center;gap:6px;height:34px;padding:0 6px}
 footer svg{width:18px;height:18px}
 
@@ -144,7 +151,7 @@ footer svg{width:18px;height:18px}
   font:400 28px/1 'IM Fell English SC',Georgia,serif;color:var(--oro)}
 @media (orientation:landscape) and (max-height:520px){#gira{display:grid}}
 @media (max-height:640px){#res{height:62px}#resNum{font-size:44px}.gordo{height:52px}}
-@media (prefers-reduced-motion:reduce){#res.entra #resNum,#res.entra #resNivel,#hoja{animation:none}}
+@media (prefers-reduced-motion:reduce){#icoAgita.menea{animation:none}#res.entra #resNum,#res.entra #resNivel,#hoja{animation:none}}
 </style>
 </head>
 <body>
@@ -196,7 +203,10 @@ footer svg{width:18px;height:18px}
         <button class="paso" id="btnVaciar"></button>
       </div>
     </div>
-    <button class="gordo" id="btnTirar"></button>
+    <button class="gordo" id="btnTirar"><span id="txtTirar"></span>
+      <svg id="icoAgita" viewBox="0 0 30 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="10" y="2.500" width="10" height="19" rx="2.400"/><path d="M13.500 18h3"/><path d="M5.500 8.500c-1.300 2.200-1.300 4.800 0 7M2 6.500c-2 3.400-2 7.600 0 11M24.500 8.500c1.300 2.200 1.300 4.800 0 7M28 6.500c2 3.400 2 7.600 0 11"/></svg>
+    </button>
+    <button id="lineaAgita" hidden></button>
   </section>
 
   <footer>

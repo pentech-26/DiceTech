@@ -53,7 +53,7 @@ export class Mesa {
   }
 
   // tipos: ['d00','d10'] ...   Devuelve la lista de dados creados
-  lanzar(tipos) {
+  lanzar(tipos, fuerza = 1) {
     this.vacia();
     const n = tipos.length, porFila = Math.max(1, Math.min(4, Math.floor((this.hw * 2 - 1) / 2.5)));
     tipos.forEach((tipo, i) => {
@@ -72,8 +72,8 @@ export class Mesa {
       const q = new C.Quaternion(rnd(-1, 1), rnd(-1, 1), rnd(-1, 1), rnd(-1, 1));
       q.normalize();
       cuerpo.quaternion.copy(q);
-      cuerpo.velocity.set(rnd(-7, 7), rnd(-4, 2), -rnd(19, 28) / (1 + fila * 0.55));   // las filas de arriba salen más lentas para no caer encima
-      cuerpo.angularVelocity.set(rnd(-28, 28), rnd(-28, 28), rnd(-28, 28));
+      cuerpo.velocity.set(rnd(-7, 7) * fuerza, rnd(-4, 2), -rnd(19, 28) * fuerza / (1 + fila * 0.55));   // las filas de arriba salen más lentas para no caer encima
+      cuerpo.angularVelocity.set(rnd(-28, 28) * fuerza, rnd(-28, 28) * fuerza, rnd(-28, 28) * fuerza);
       cuerpo.addEventListener('collide', e => {
         if (!this.alChocar) return;
         const v = Math.abs(e.contact.getImpactVelocityAlongNormal());
