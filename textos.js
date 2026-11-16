@@ -160,6 +160,4 @@ const EXTRA = {
  }
 };
 for (const k in EXTRA) Object.assign(T[k], EXTRA[k]);
-const CUBILETE = {"es": {"pistaCubilete": "Agita el móvil como un cubilete", "pistaCubilete2": "…y déjalo sobre la mesa", "dejaMesa": "Déjalo sobre la mesa"}, "ca": {"pistaCubilete": "Sacseja el mòbil com un gobelet", "pistaCubilete2": "…i deixa’l sobre la taula", "dejaMesa": "Deixa’l sobre la taula"}, "en": {"pistaCubilete": "Shake your phone like a dice cup", "pistaCubilete2": "…then put it down on the table", "dejaMesa": "Put it down on the table"}, "fr": {"pistaCubilete": "Secouez le téléphone comme un gobelet", "pistaCubilete2": "…puis posez-le sur la table", "dejaMesa": "Posez-le sur la table"}, "de": {"pistaCubilete": "Schüttle das Handy wie einen Würfelbecher", "pistaCubilete2": "…und leg es auf den Tisch", "dejaMesa": "Leg es auf den Tisch"}, "it": {"pistaCubilete": "Scuoti il telefono come un bussolotto", "pistaCubilete2": "…e appoggialo sul tavolo", "dejaMesa": "Appoggialo sul tavolo"}};
-for (const k in CUBILETE) Object.assign(T[k], CUBILETE[k]);
 export const IDIOMAS = { es: 'Español', ca: 'Català', en: 'English', fr: 'Français', de: 'Deutsch', it: 'Italiano' };

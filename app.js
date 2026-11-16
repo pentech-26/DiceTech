@@ -47,7 +47,7 @@ let mod = +lee('dicetech-mod', 0) || 0;
 let sonido = lee('dicetech-sonido', true);
 let historial = lee('dicetech-historial-v1', []);
 let enTapete = false, rodando = false, ultima = null;
-let fase = 'vacio';        // vacio · agitando (cubilete) · enMano (esperando a dejar el móvil) · rodando · quieto
+let fase = 'vacio';        // vacio · agitando (cubilete) · rodando · quieto
 
 /* ───────────── Sonido (sintetizado, sin archivos) ───────────── */
 let ac = null, ruido = null, salida = null, rumorG = null;
@@ -256,19 +256,14 @@ function cuadro(ts) {
   const ahora = performance.now();
   while (resto >= PASO && rodando) {
     resto -= PASO;
-    if (fase === 'agitando' || fase === 'enMano') {
+    if (fase === 'agitando') {
       if (ahora - acc.t < 90) mesa.zarandea(acc.x, acc.y, acc.z, PASO);   // solo con datos recientes del sensor
       mesa.paso();
     } else if (mesa.paso()) rodando = false;
   }
-  if (fase === 'agitando' && ahora - fuerteUlt > 380 && ahora - inicioAgite > 300) {   // se ha dejado de agitar: a la espera de dejarlo
-    fase = 'enMano'; enManoDesde = ahora;
-    pintaPista();
-  }
-  if (fase === 'enMano' && ((quietoDesde && ahora - quietoDesde > 220) || ahora - enManoDesde > ESPERA_MESA)) {   // en la mesa (o se cansó de esperar): ¡salen!
+  if (fase === 'agitando' && ahora - fuerteUlt > 380 && ahora - inicioAgite > 300) {   // se ha dejado de agitar: ¡salen!
     mesa.suelta();
     fase = 'rodando';
-    pintaPista();
   }
   let s = 0;                                // el rumor sube con lo que ruedan los dados apoyados
   for (const d of mesa.dados) {
@@ -342,7 +337,7 @@ function empiezaCubilete() {
   tiposMesa = clave;
   ultima = { pendiente: true, m: modo, h: hab, mod };
   fase = 'agitando'; rodando = true;
-  inicioAgite = performance.now(); quietoDesde = 0;
+  inicioAgite = performance.now();
   $('#pista').classList.add('fuera');
   $('#resT').classList.remove('ver');
   $('#btnRepetir').hidden = true;
@@ -450,9 +445,7 @@ function cierraTapete() {
 
 function pintaPista() {
   const p = $('#pista');
-  p.classList.toggle('abajo', fase === 'enMano');
-  if (fase === 'enMano') { p.innerHTML = t.dejaMesa; p.classList.toggle('fuera', !enTapete); return; }
-  p.innerHTML = agitaActivo() ? `${t.pistaCubilete}<small>${t.pistaCubilete2}</small>` : t.pistaToca;
+  p.textContent = agitaActivo() ? t.pistaAgita : t.pistaToca;
   p.classList.toggle('fuera', !enTapete || rodando || mallas.length > 0);
 }
 
@@ -463,8 +456,7 @@ let agitar = lee('dicetech-agitar', null);      // true, false o null (sin decid
 let escucha = false, denegado = false, ultimoFin = 0, aTapete = 0, golpes = [];
 const agitaActivo = () => puedeAgitar && !denegado && agitar === true && escucha;
 
-let acc = { x: 0, y: 0, z: 0, t: 0 }, fuerteUlt = 0, inicioAgite = 0, gBaja = null, enManoDesde = 0, quietoDesde = 0;
-const ESPERA_MESA = 2600;    // si no se deja el móvil en la mesa, los dados salen solos al cabo de este tiempo (ms)
+let acc = { x: 0, y: 0, z: 0, t: 0 }, fuerteUlt = 0, inicioAgite = 0, gBaja = null;
 function alMover(e) {
   if (!agitar || !enTapete || document.hidden || $('#velo').classList.contains('abierto')) return;
   let x, y, z;
@@ -478,16 +470,9 @@ function alMover(e) {
     x = g.x - gBaja.x; y = g.y - gBaja.y; z = g.z - gBaja.z;
   }
   const m = Math.hypot(x, y, z), ahora = performance.now();
-  if (fase === 'agitando' || fase === 'enMano') {            // los dados siguen al móvil
+  if (fase === 'agitando') {                                 // los dados siguen al móvil
     acc = { x, y, z, t: ahora };
     if (m > 6) fuerteUlt = ahora;
-    if (fase === 'enMano') {
-      if (m > 12) { fase = 'agitando'; quietoDesde = 0; pintaPista(); return; }   // vuelve a agitar
-      // ¿está tumbado y quieto? La gravedad cae casi entera en el eje z de la pantalla
-      const g = e.accelerationIncludingGravity;
-      const plano = g && g.z != null && Math.abs(g.z) > 8.3 && Math.hypot(g.x, g.y) < 3.2;
-      if (plano && m < 1.3) { if (!quietoDesde) quietoDesde = ahora; } else quietoDesde = 0;
-    }
     return;
   }
   if (fase === 'rodando' || ahora - ultimoFin < 600 || ahora - aTapete < 400) return;
