@@ -119,11 +119,16 @@ footer svg{width:19px;height:19px}
   font:400 27px/1.25 'IM Fell English SC',Georgia,serif;letter-spacing:.03em;color:#f1e7cc;text-shadow:0 2px 10px rgba(0,0,0,.5);
   animation:latido 2.6s ease-in-out infinite;transition:opacity .35s}
 #pista.fuera{opacity:0!important;animation:none}
+#pista.abajo{top:auto;bottom:92px;left:50%;right:auto;transform:translateX(-50%);white-space:nowrap;padding:10px 20px;border-radius:24px;
+  font-size:22px;background:rgba(6,16,12,.55);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.12);animation:latidoFuerte 1.6s ease-in-out infinite}
+@keyframes latidoFuerte{0%,100%{opacity:.6}50%{opacity:1}}
+#pista small{display:block;margin-top:8px;font-size:20px;opacity:.85}
 @keyframes latido{0%,100%{opacity:.2}50%{opacity:.78}}
-#resT{position:absolute;bottom:88px;left:50%;transform:translateX(-50%);
+#resT{position:absolute;bottom:88px;top:auto;left:50%;transform:translateX(-50%);
   min-width:210px;max-width:calc(100% - 36px);padding:12px 22px 11px;border-radius:24px;text-align:center;pointer-events:none;
   background:rgba(6,16,12,.6);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);border:1px solid rgba(255,255,255,.09);
   color:#ece4cf;display:none}
+#resT.arriba{top:calc(env(safe-area-inset-top) + 16px);bottom:auto}
 #resT.ver{display:block;animation:entra .35s cubic-bezier(.2,1.4,.4,1)}
 @keyframes entra{from{transform:translateX(-50%) scale(.7);opacity:0}to{transform:translateX(-50%);opacity:1}}
 #resN{font:700 54px/1 'Cinzel',Georgia,serif}

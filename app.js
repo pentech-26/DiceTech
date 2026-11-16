@@ -47,6 +47,7 @@ let mod = +lee('dicetech-mod', 0) || 0;
 let sonido = lee('dicetech-sonido', true);
 let historial = lee('dicetech-historial-v1', []);
 let enTapete = false, rodando = false, ultima = null;
+let fase = 'vacio';        // vacio · agitando (cubilete) · enMano (esperando a dejar el móvil) · rodando · quieto
 
 /* ───────────── Sonido (sintetizado, sin archivos) ───────────── */
 let ac = null, ruido = null, salida = null, rumorG = null;
@@ -189,13 +190,14 @@ function pieza(tipo) {
     } else {
       const v = def.valores[i];
       const txt = tipo === 'd00' ? (v ? v + '0' : '00') : String(v);
-      const tam = inr * (txt.length > 1 ? (def.lados === 10 ? 0.92 : 1.02) : 1.3);
+      const tam = def.lados === 10 ? inr * (txt.length > 1 ? 1.12 : 1.62)       // la cometa del d10 es estrecha: números más grandes
+        : inr * (txt.length > 1 ? 1.02 : 1.3);
       g.font = fuente(tam);
-      const baja = def.lados === 10 ? inr * 0.12 : (c.idx.length === 3 ? inr * 0.06 : 0);   // en cometas y triángulos, un poco hacia la parte ancha
+      const baja = def.lados === 10 ? inr * 0.2 : (c.idx.length === 3 ? inr * 0.06 : 0);   // en cometas y triángulos, un poco hacia la parte ancha
       g.fillText(txt, cx, cy + baja + tam * 0.04);
       if (def.lados >= 10 && tipo !== 'd00' && (v === 6 || v === 9)) {
         const w = g.measureText(txt).width;
-        g.fillRect(cx - w * 0.4, cy + baja + tam * 0.48, w * 0.8, Math.max(3, tam * 0.07));
+        g.fillRect(cx - w * 0.42, cy + baja + tam * 0.47, w * 0.84, Math.max(4, tam * 0.1));   // raya del 6 y el 9
       }
     }
     for (let j = 1; j < V.length - 1; j++) {
@@ -251,9 +253,22 @@ function cuadro(ts) {
   if (!rodando) return;
   resto += Math.min(0.05, (ts - previo) / 1000 || 0);
   previo = ts;
+  const ahora = performance.now();
   while (resto >= PASO && rodando) {
     resto -= PASO;
-    if (mesa.paso()) rodando = false;
+    if (fase === 'agitando' || fase === 'enMano') {
+      if (ahora - acc.t < 90) mesa.zarandea(acc.x, acc.y, acc.z, PASO);   // solo con datos recientes del sensor
+      mesa.paso();
+    } else if (mesa.paso()) rodando = false;
+  }
+  if (fase === 'agitando' && ahora - fuerteUlt > 380 && ahora - inicioAgite > 300) {   // se ha dejado de agitar: a la espera de dejarlo
+    fase = 'enMano'; enManoDesde = ahora;
+    pintaPista();
+  }
+  if (fase === 'enMano' && ((quietoDesde && ahora - quietoDesde > 220) || ahora - enManoDesde > ESPERA_MESA)) {   // en la mesa (o se cansó de esperar): ¡salen!
+    mesa.suelta();
+    fase = 'rodando';
+    pintaPista();
   }
   let s = 0;                                // el rumor sube con lo que ruedan los dados apoyados
   for (const d of mesa.dados) {
@@ -288,6 +303,7 @@ function tirar(fuerza) {
   despiertaAudio();
   const tipos = tiposTirada();
   if (!tipos.length) return;
+  tiposMesa = tipos.join(',');
   for (const m of mallas) escena.remove(m.malla);
   mallas = mesa.lanzar(tipos, typeof fuerza === 'number' ? fuerza : 1).map(dado => {
     const p = pieza(dado.tipo), malla = new THREE.Mesh(p.geo, p.mat);
@@ -296,7 +312,7 @@ function tirar(fuerza) {
     return { dado, malla };
   });
   ultima = { pendiente: true, m: modo, h: hab, mod };
-  rodando = true;
+  rodando = true; fase = 'rodando';
   $('#pista').classList.add('fuera');
   $('#resT').classList.remove('ver');
   $('#btnRepetir').hidden = true;
@@ -305,6 +321,32 @@ function tirar(fuerza) {
     while (!mesa.paso() && s++ < 2000) {}
     rodando = false; pinta(); fin();
   } else { previo = performance.now(); resto = 0; requestAnimationFrame(cuadro); }
+}
+
+let tiposMesa = '';
+function empiezaCubilete() {
+  despiertaAudio();
+  const tipos = tiposTirada();
+  if (!tipos.length) return;
+  const clave = tipos.join(',');
+  if (fase === 'quieto' && mesa.dados.length && clave === tiposMesa) mesa.agitaOtraVez();   // se recogen los mismos dados
+  else {
+    for (const m of mallas) escena.remove(m.malla);
+    mallas = mesa.prepara(tipos).map(dado => {
+      const p = pieza(dado.tipo), malla = new THREE.Mesh(p.geo, p.mat);
+      malla.castShadow = true;
+      escena.add(malla);
+      return { dado, malla };
+    });
+  }
+  tiposMesa = clave;
+  ultima = { pendiente: true, m: modo, h: hab, mod };
+  fase = 'agitando'; rodando = true;
+  inicioAgite = performance.now(); quietoDesde = 0;
+  $('#pista').classList.add('fuera');
+  $('#resT').classList.remove('ver');
+  $('#btnRepetir').hidden = true;
+  previo = performance.now(); resto = 0; requestAnimationFrame(cuadro);
 }
 
 function nivelCth(r, h) {               // ediciones anteriores a la 7.ª
@@ -317,6 +359,7 @@ function nivelCth(r, h) {               // ediciones anteriores a la 7.ª
 function fin() {
   rumor(0);
   if (!enTapete) return;
+  fase = 'quieto';
   const ds = mesa.dados, grupos = [];
   for (let i = 0; i < ds.length; i++) {
     if (ds[i].tipo === 'd00') { const r = ds[i].valor * 10 + ds[i + 1].valor; grupos.push(['d100', r === 0 ? 100 : r]); i++; }
@@ -360,6 +403,17 @@ function pintaResultado() {
     $('#resDet').textContent = desglose(ultima);
   }
   $('#resOtra').textContent = agitaActivo() ? t.otraAgita : t.otraToca;
+  $('#pista').classList.add('fuera');
+  // la tarjeta se pone donde no tape dados: abajo por defecto, arriba si abajo hay más
+  const alto = lienzo.clientHeight, v = new THREE.Vector3();
+  let abajo = 0, arriba = 0;
+  for (const m of mallas) {
+    v.copy(m.malla.position).project(camara);
+    const y = (1 - v.y) / 2 * alto;
+    if (y > alto - 300) abajo++;
+    if (y < 230) arriba++;
+  }
+  box.classList.toggle('arriba', abajo > arriba);
   box.classList.remove('ver'); void box.offsetWidth; box.classList.add('ver');
 }
 
@@ -370,7 +424,7 @@ function abreTapete() {
   despiertaAudio();
   if (puedeAgitar && agitar !== false && !escucha && !denegado) activaAgitar(false);   // el permiso del iPhone sale de este toque
   enTapete = true;
-  ultima = null;
+  ultima = null; fase = 'vacio';
   $('#tapete').classList.add('abierto');
   document.body.classList.add('en-tapete');
   document.querySelector('meta[name="theme-color"]').content = '#2a1a0e';
@@ -386,7 +440,7 @@ function abreTapete() {
 
 function cierraTapete() {
   if (!enTapete) return;
-  enTapete = false; rodando = false; rumor(0);
+  enTapete = false; rodando = false; fase = 'vacio'; rumor(0);
   $('#tapete').classList.remove('abierto');
   document.body.classList.remove('en-tapete');
   limpiaMesa();
@@ -396,7 +450,9 @@ function cierraTapete() {
 
 function pintaPista() {
   const p = $('#pista');
-  p.textContent = agitaActivo() ? t.pistaAgita : t.pistaToca;
+  p.classList.toggle('abajo', fase === 'enMano');
+  if (fase === 'enMano') { p.innerHTML = t.dejaMesa; p.classList.toggle('fuera', !enTapete); return; }
+  p.innerHTML = agitaActivo() ? `${t.pistaCubilete}<small>${t.pistaCubilete2}</small>` : t.pistaToca;
   p.classList.toggle('fuera', !enTapete || rodando || mallas.length > 0);
 }
 
@@ -404,30 +460,44 @@ function pintaPista() {
 const puedeAgitar = 'DeviceMotionEvent' in window && ('ontouchstart' in window || navigator.maxTouchPoints > 0);
 const pidePermiso = puedeAgitar && typeof DeviceMotionEvent.requestPermission === 'function';   // iPhone
 let agitar = lee('dicetech-agitar', null);      // true, false o null (sin decidir)
-let escucha = false, denegado = false, ultimoFin = 0, aTapete = 0, golpes = [], pico = 0;
+let escucha = false, denegado = false, ultimoFin = 0, aTapete = 0, golpes = [];
 const agitaActivo = () => puedeAgitar && !denegado && agitar === true && escucha;
 
+let acc = { x: 0, y: 0, z: 0, t: 0 }, fuerteUlt = 0, inicioAgite = 0, gBaja = null, enManoDesde = 0, quietoDesde = 0;
+const ESPERA_MESA = 2600;    // si no se deja el móvil en la mesa, los dados salen solos al cabo de este tiempo (ms)
 function alMover(e) {
-  if (!agitar || !enTapete || rodando || document.hidden || $('#velo').classList.contains('abierto')) return;
-  let m;
+  if (!agitar || !enTapete || document.hidden || $('#velo').classList.contains('abierto')) return;
+  let x, y, z;
   const a = e.acceleration;
-  if (a && a.x != null) m = Math.hypot(a.x, a.y, a.z);
-  else {
+  if (a && a.x != null) { x = a.x; y = a.y; z = a.z; }
+  else {                                                     // sin "acceleration": se quita la gravedad con un filtro
     const g = e.accelerationIncludingGravity;
     if (!g || g.x == null) return;
-    m = Math.abs(Math.hypot(g.x, g.y, g.z) - 9.81);
+    if (!gBaja) gBaja = { x: g.x, y: g.y, z: g.z };
+    gBaja.x += (g.x - gBaja.x) * 0.1; gBaja.y += (g.y - gBaja.y) * 0.1; gBaja.z += (g.z - gBaja.z) * 0.1;
+    x = g.x - gBaja.x; y = g.y - gBaja.y; z = g.z - gBaja.z;
   }
-  const ahora = performance.now();
-  if (ahora - ultimoFin < 700 || ahora - aTapete < 400) return;     // un respiro tras cada tirada
-  golpes = golpes.filter(x => ahora - x < 650);
-  if (!golpes.length) pico = 0;
-  if (m < 13) return;
-  pico = Math.max(pico, m);
-  if (!golpes.length || ahora - golpes[golpes.length - 1] > 70) golpes.push(ahora);
-  if (golpes.length >= 3) {                                  // tres sacudidas seguidas: meneo decidido
-    const fuerza = Math.max(0.85, Math.min(1.45, pico / 22));
-    golpes = []; pico = 0;
-    tirar(fuerza);
+  const m = Math.hypot(x, y, z), ahora = performance.now();
+  if (fase === 'agitando' || fase === 'enMano') {            // los dados siguen al móvil
+    acc = { x, y, z, t: ahora };
+    if (m > 6) fuerteUlt = ahora;
+    if (fase === 'enMano') {
+      if (m > 12) { fase = 'agitando'; quietoDesde = 0; pintaPista(); return; }   // vuelve a agitar
+      // ¿está tumbado y quieto? La gravedad cae casi entera en el eje z de la pantalla
+      const g = e.accelerationIncludingGravity;
+      const plano = g && g.z != null && Math.abs(g.z) > 8.3 && Math.hypot(g.x, g.y) < 3.2;
+      if (plano && m < 1.3) { if (!quietoDesde) quietoDesde = ahora; } else quietoDesde = 0;
+    }
+    return;
+  }
+  if (fase === 'rodando' || ahora - ultimoFin < 600 || ahora - aTapete < 400) return;
+  golpes = golpes.filter(g => ahora - g < 450);
+  if (m < 12) return;
+  if (!golpes.length || ahora - golpes[golpes.length - 1] > 60) golpes.push(ahora);
+  if (golpes.length >= 2) {                                  // dos sacudidas seguidas: empieza el cubilete
+    golpes = [];
+    acc = { x, y, z, t: ahora }; fuerteUlt = ahora;
+    empiezaCubilete();
   }
 }
 
@@ -718,5 +788,5 @@ new ResizeObserver(() => { if (enTapete) ajusta(); }).observe(lienzo);
 (document.fonts && document.fonts.load ? Promise.race([document.fonts.load('700 40px Cinzel'), new Promise(r => setTimeout(r, 1500))]) : Promise.resolve())
   .catch(() => {}).then(creaMinis);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) arrancaMinis(); });
-window.__dicetech = { mesa, tirar, abreTapete, estado: () => ({ enTapete, rodando, ultima, n: mallas.length, agita: agitaActivo() }) };
+window.__dicetech = { mesa, tirar, abreTapete, estado: () => ({ enTapete, rodando, fase, ultima, n: mallas.length, agita: agitaActivo() }) };
 if ('serviceWorker' in navigator && location.protocol === 'https:') navigator.serviceWorker.register('sw.js').catch(() => {});
